@@ -1,37 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
-function Form({ addOrUpdateItem, itemToEdit }) {
-  const [inputValue, setInputValue] = useState('');
+function Form({ onAdd, onUpdate, editingItem, onCancelEdit }) {
+  const [text, setText] = useState('')
+
 
   useEffect(() => {
-    if (itemToEdit) {
-      setInputValue(itemToEdit.value);
+    if (editingItem) {
+      setText(editingItem.text)
     } else {
-      setInputValue('');
+      setText('')
     }
-  }, [itemToEdit]);
+  }, [editingItem])
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (inputValue.trim()) {
-      addOrUpdateItem(inputValue);
-      setInputValue('');
+    e.preventDefault()
+    if (editingItem) {
+      onUpdate(editingItem.id, text)
+    } else {
+      onAdd(text)
     }
-  };
+    setText('')
+  }
+
+  const handleCancel = () => {
+    setText('')
+    onCancelEdit()
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="item-form" onSubmit={handleSubmit}>
       <input
         type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
+        className="text-input"
+        placeholder="Escribe un elemento..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
       />
-      <button type="submit">
-        {itemToEdit ? 'Actualizar' : 'Agregar'}
+      <button type="submit" className="btn-submit">
+        {editingItem ? 'Actualizar' : 'Agregar'}
       </button>
+      {editingItem && (
+        <button type="button" className="btn-cancel" onClick={handleCancel}>
+          Cancelar
+        </button>
+      )}
     </form>
-  );
+  )
 }
 
-export default Form;
+export default Form

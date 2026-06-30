@@ -1,62 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import Form from './components/Form';
-import List from './components/List';
-import Item from './components/Item';
-import './index.css';
+import { useState, useEffect } from 'react'
+import Form from './components/Form'
+import List from './components/List'
+import './App.css'
+
+const STORAGE_KEY = 'crud-items'
 
 function App() {
-  const [items, setItems] = useState([]);
-  const [itemToEdit, setItemToEdit] = useState(null);
+  const [items, setItems] = useState([])
+  const [editingId, setEditingId] = useState(null)
 
+  
   useEffect(() => {
-    const storedItems =
-      JSON.parse(localStorage.getItem('items')) || [];
-    setItems(storedItems);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('items', JSON.stringify(items));
-  }, [items]);
-
-  const addOrUpdateItem = (value) => {
-    if (itemToEdit) {
-      setItems(
-        items.map((item) =>
-          item.id === itemToEdit.id
-            ? { ...item, value }
-            : item
-        )
-      );
-      setItemToEdit(null);
-    } else {
-      setItems([...items, { id: Date.now(), value }]);
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      setItems(JSON.parse(saved))
     }
-  };
+  }, [])
+
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+  }, [items])
+
+  const addItem = (text) => {
+    const newItem = {
+      id: Date.now(),
+      text: text,
+    }
+    setItems((prev) => [...prev, newItem])
+  }
+
+  const updateItem = (id, text) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, text: text } : item))
+    )
+    setEditingId(null)
+  }
+
+  const startEdit = (id) => {
+    setEditingId(id)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+  }
 
   const deleteItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
+    setItems((prev) => prev.filter((item) => item.id !== id))
+    if (editingId === id) setEditingId(null)
+  }
 
-  const editItem = (item) => {
-    setItemToEdit(item);
-  };
+  const editingItem = items.find((item) => item.id === editingId) || null
 
   return (
-    <div className="App">
-      <h1>CRUD con LocalStorage</h1>
+    <div className="app-container">
+      <div className="card">
+        <h1 className="title">Crud Con LocalStorage</h1>
 
-      <Form
-        addOrUpdateItem={addOrUpdateItem}
-        itemToEdit={itemToEdit}
-      />
+        <Form
+          onAdd={addItem}
+          onUpdate={updateItem}
+          editingItem={editingItem}
+          onCancelEdit={cancelEdit}
+        />
 
-      <List
-        items={items}
-        deleteItem={deleteItem}
-        editItem={editItem}
-      />
+        <List items={items} onEdit={startEdit} onDelete={deleteItem} />
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
